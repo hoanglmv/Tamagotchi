@@ -18,6 +18,8 @@ ENV/
 *.wav
 temp_audio/
 cache/
+data/*.db
+data/audio_cache/
 
 # IDE & Editor
 .vscode/

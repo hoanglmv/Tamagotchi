@@ -1,6 +1,7 @@
 """
 AI Brain & Agent Pipeline for myDeskAssistant.
-Coordinates LLM (OpenRouter / Gemini) and MCP tool calling loop.
+Coordinates LLM (OpenRouter / Gemini) and MCP tool calling loop
+with dynamic Frieren character personas (Frieren, Fern, Stark, Himmel).
 """
 
 from typing import Dict, Any, List, Optional, Callable
@@ -11,7 +12,7 @@ import inspect
 from pathlib import Path
 from dotenv import load_dotenv
 
-from core.persona import get_system_prompt
+from core.persona import get_character_prompt, CHARACTER_PERSONAS
 from core.memory import MemoryManager
 from mcp_servers import system_server, file_server
 
@@ -25,16 +26,12 @@ class AssistantBrain:
     def __init__(
         self,
         memory: Optional[MemoryManager] = None,
+        active_character: str = "frieren",
         on_status_change: Optional[Callable[[str, str], None]] = None,
         on_tool_call: Optional[Callable[[str, Dict[str, Any]], None]] = None
     ):
-        """
-        Args:
-            memory: SQLite MemoryManager instance.
-            on_status_change: Callback function (status: 'thinking' | 'tool' | 'talking' | 'idle', message: str).
-            on_tool_call: Callback function (tool_name, arguments).
-        """
         self.memory = memory or MemoryManager()
+        self.active_character = active_character
         self.on_status_change = on_status_change
         self.on_tool_call = on_tool_call
 
@@ -42,10 +39,6 @@ class AssistantBrain:
         self.openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip()
         self.openrouter_base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
         self.openrouter_model = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash")
-
-        self.gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
-        self.assistant_name = os.getenv("ASSISTANT_NAME", "Lumi")
-        self.user_name = os.getenv("USER_NAME", "Senpai")
 
         # Map tool names to python functions
         self.tools_map = {
@@ -60,6 +53,11 @@ class AssistantBrain:
         }
 
         self.tools_schema = self._build_tools_schema()
+
+    def set_character(self, char_key: str):
+        """Switch current Frieren character persona dynamically."""
+        if char_key.lower() in CHARACTER_PERSONAS:
+            self.active_character = char_key.lower()
 
     def _notify_status(self, status: str, message: str = ""):
         if self.on_status_change:
@@ -221,7 +219,6 @@ class AssistantBrain:
             return {"error": f"Tool '{tool_name}' không tồn tại."}
 
         try:
-            # Handle async and sync tools
             if inspect.iscoroutinefunction(tool_fn):
                 result = await tool_fn(**arguments)
             else:
@@ -246,7 +243,7 @@ class AssistantBrain:
 
         # Build context
         history = self.memory.get_recent_messages(limit=8)
-        system_prompt = get_system_prompt(self.assistant_name, self.user_name)
+        system_prompt = get_character_prompt(self.active_character)
 
         messages: List[Dict[str, Any]] = [
             {"role": "system", "content": system_prompt}
@@ -258,7 +255,6 @@ class AssistantBrain:
 
         # Check API key
         if not self.openrouter_key or self.openrouter_key == "your_openrouter_api_key_here":
-            # Fallback mock mode if API key not configured yet
             fallback_response = self._handle_offline_fallback(user_prompt)
             self.memory.add_message("assistant", fallback_response)
             self._notify_status("idle", "")
@@ -271,7 +267,7 @@ class AssistantBrain:
             base_url=self.openrouter_base_url,
             default_headers={
                 "HTTP-Referer": "https://github.com/myDeskAssistant",
-                "X-Title": "myDeskAssistant Anime Desktop Pet"
+                "X-Title": "myDeskAssistant Frieren Desktop Pet"
             }
         )
 
@@ -291,7 +287,6 @@ class AssistantBrain:
 
             # Check if LLM requested tool calling
             if message.tool_calls:
-                # Add assistant message containing tool calls
                 messages.append(message.model_dump())
 
                 for tool_call in message.tool_calls:
@@ -301,10 +296,8 @@ class AssistantBrain:
                     except Exception:
                         fn_args = {}
 
-                    # Execute tool
                     tool_output = await self._execute_tool(fn_name, fn_args)
 
-                    # Append tool result to messages
                     messages.append({
                         "role": "tool",
                         "tool_call_id": tool_call.id,
@@ -313,7 +306,7 @@ class AssistantBrain:
                     })
 
                 # Turn 2: Get final friendly response from LLM
-                self._notify_status("thinking", "Đang tổng hợp câu trả lời...")
+                self._notify_status("thinking", "Đang tổng hợp lời đáp...")
                 second_response = await client.chat.completions.create(
                     model=self.openrouter_model,
                     messages=messages,
@@ -332,19 +325,35 @@ class AssistantBrain:
         except Exception as e:
             err_msg = f"Gặp lỗi khi kết nối OpenRouter: {str(e)}"
             self._notify_status("idle", "")
-            return f"Oa... {self.user_name} ơi, Lumi gặp sự cố rồi: {err_msg} (｡•́︿•̀｡)"
+            char_name = CHARACTER_PERSONAS.get(self.active_character, {}).get("name", "Frieren")
+            return f"Hình như đường truyền ma pháp gặp chút trục trặc rồi... ({err_msg})"
 
     def _handle_offline_fallback(self, user_prompt: str) -> str:
-        """Helpful offline fallback response when OPENROUTER_API_KEY is not yet filled."""
+        """Helpful offline fallback matching the active Frieren character."""
         p_lower = user_prompt.lower()
+        char = self.active_character
+
         if any(k in p_lower for k in ["pc", "máy tính", "ram", "cpu", "pin", "phần cứng"]):
             stats = system_server.get_pc_stats()
             cpu = stats['cpu']['usage_percent']
             ram = stats['ram']['usage_percent']
-            battery_str = f", pin còn {stats['battery']['percent']}%" if stats['battery']['has_battery'] else ""
-            return f"Chào {self.user_name}! Lumi đang chạy chế độ Offline do chưa có OPENROUTER_API_KEY. Nhưng em vẫn kiểm tra được máy: CPU đang ở mức {cpu}%, RAM đã dùng {ram}%{battery_str} nha! (˶ᵔ ᵕ ᵔ˶)"
-        
-        return (
-            f"Chào {self.user_name}! Em là {self.assistant_name} đây! ✨\n"
-            f"Để kích hoạt toàn bộ trí thông minh AI của em, {self.user_name} hãy điền 'OPENROUTER_API_KEY' vào file '.env' nhé! (˶ᵔ ᵕ ᵔ˶)"
-        )
+            battery_str = f", lượng mana dự trữ (pin) còn {stats['battery']['percent']}%" if stats['battery']['has_battery'] else ""
+            
+            if char == "frieren":
+                return f"Mình đã dùng ma pháp cảm nhận xong rồi... Dòng chảy ma lực (CPU) đang ở mức {cpu}%, bộ nhớ thần kinh (RAM) tiêu hao {ram}%{battery_str}. Máy tính của bạn vẫn đang hoạt động ổn định đấy."
+            elif char == "fern":
+                return f"Em đã kiểm tra máy tính cho anh xong rồi ạ. CPU là {cpu}%, RAM đã dùng {ram}%{battery_str}. Anh nhớ đừng làm việc quá sức nhé, em sẽ lo đấy ạ."
+            elif char == "stark":
+                return f"Yo! Tôi vừa dạo một vòng kiểm tra phần cứng đây! CPU {cpu}%, RAM {ram}%{battery_str}. Ngon lành cành đào, chẳng có con quái vật nào làm chậm máy được đâu!"
+            elif char == "himmel":
+                return f"Tôi đã thay bạn xem xét cẩn thận rồi. CPU hiện tại là {cpu}%, RAM chiếm {ram}%{battery_str}. Hãy an tâm làm việc nhé, vì dũng sĩ tuyệt vời như tôi đang dõi theo bạn mà!"
+
+        # Default greeting if key missing
+        if char == "frieren":
+            return "Chào bạn... Mình là Frieren. Để mình có thể giải phóng toàn bộ ma pháp trò chuyện, bạn hãy điền OPENROUTER_API_KEY vào file .env nhé."
+        elif char == "fern":
+            return "Em chào anh. Anh hãy bổ sung OPENROUTER_API_KEY vào file .env để em có thể hầu chuyện anh một cách trọn vẹn nhất nhé."
+        elif char == "stark":
+            return "Yo! Stark đây! Nhớ thêm OPENROUTER_API_KEY vào file .env để chúng ta cùng trò chuyện rôm rả hơn nhé anh bạn!"
+        elif char == "himmel":
+            return "Chào bạn đồng hành của tôi! Hãy điền OPENROUTER_API_KEY vào file .env để tôi có thể tỏa sáng rực rỡ nhất bên bạn nhé!"

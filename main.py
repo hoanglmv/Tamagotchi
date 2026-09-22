@@ -1,6 +1,6 @@
 """
 Main entry point for myDeskAssistant.
-Supports both GUI Desktop Pet (PyQt6) and CLI Terminal mode.
+Supports both GUI Desktop Pet (PyQt6) with Frieren characters and CLI Terminal mode.
 """
 
 import sys
@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 # Load environment
 load_dotenv()
 
-from core.persona import get_system_prompt
+from core.persona import get_character_prompt, CHARACTER_PERSONAS
 from core.memory import MemoryManager
 from core.llm_client import AssistantBrain
 from core.tts_service import TTSService
@@ -21,34 +21,48 @@ from core.tts_service import TTSService
 
 def run_cli_mode():
     """Run interactive text-based chat directly inside the terminal."""
-    print("=" * 60)
+    print("=" * 65)
     print("✨ myDeskAssistant - Chế độ dòng lệnh (CLI Mode)")
-    print("✨ Bạn đang trò chuyện cùng Trợ lý Anime (Frieren / Lumi)")
+    print("✨ Bạn đang trò chuyện cùng các nhân vật Frieren (Frieren, Fern, Stark, Himmel)")
+    print("✨ Gõ 'switch [frieren|fern|stark|himmel]' để đổi nhân vật.")
     print("✨ Gõ 'exit' hoặc 'quit' để thoát.")
-    print("=" * 60)
+    print("=" * 65)
 
     memory = MemoryManager()
     brain = AssistantBrain(
         memory=memory,
+        active_character="frieren",
         on_status_change=lambda status, msg: print(f"[{status.upper()}] {msg}" if msg else ""),
-        on_tool_call=lambda name, args: print(f"[MCP TOOL] Đang gọi {name}({args})...")
+        on_tool_call=lambda name, args: print(f"[MCP TOOL] Đang kích hoạt {name}({args})...")
     )
     tts = TTSService()
 
     async def _chat_loop():
         while True:
             try:
-                user_input = input("\nSenpai: ").strip()
+                char_name = CHARACTER_PERSONAS[brain.active_character]["name"]
+                user_input = input(f"\nBạn (đang nói với {char_name}): ").strip()
                 if not user_input:
                     continue
                 if user_input.lower() in ["exit", "quit", "thoat"]:
-                    print("\nTạm biệt Senpai! Hẹn gặp lại nha~ (˶ᵔ ᵕ ᵔ˶)")
+                    print(f"\nTạm biệt bạn! Hẹn gặp lại trong chuyến hành trình tiếp theo.")
                     break
 
-                response = await brain.generate_response(user_input)
-                print(f"\nLumi: {response}")
+                # Switch character command
+                if user_input.lower().startswith("switch "):
+                    target = user_input.split()[1].lower()
+                    if target in CHARACTER_PERSONAS:
+                        brain.set_character(target)
+                        print(f"✨ Đã đổi nhân vật đồng hành sang: {CHARACTER_PERSONAS[target]['name']}")
+                        continue
+                    else:
+                        print(f"Nhân vật không hợp lệ. Chọn một trong: {list(CHARACTER_PERSONAS.keys())}")
+                        continue
 
-                # Optional TTS test in CLI
+                response = await brain.generate_response(user_input)
+                print(f"\n{char_name}: {response}")
+
+                # Optional TTS
                 audio_file = await tts.generate_speech(response)
                 if audio_file:
                     tts.play_audio_file(audio_file)
@@ -74,16 +88,19 @@ def run_gui_mode():
         response_ready = pyqtSignal(str, object)  # response_text, audio_path
         status_changed = pyqtSignal(str, str)    # state ('thinking', 'talking', 'idle'), message
 
-        def __init__(self):
+        def __init__(self, character: str = "frieren"):
             super().__init__()
             self.memory = MemoryManager()
             self.brain = AssistantBrain(
                 memory=self.memory,
+                active_character=character,
                 on_status_change=self._on_brain_status,
                 on_tool_call=self._on_tool_call
             )
             self.tts = TTSService()
-            self._loop = None
+
+        def set_character(self, char_key: str):
+            self.brain.set_character(char_key)
 
         def _on_brain_status(self, status: str, msg: str):
             state = "thinking" if status in ["thinking", "tool"] else "idle"
@@ -116,13 +133,14 @@ def run_gui_mode():
 
     # Create Worker and background QThread
     thread = QThread()
-    worker = AssistantWorker()
+    worker = AssistantWorker(character="frieren")
     worker.moveToThread(thread)
     thread.start()
 
     # Signals connection: UI -> Worker
     pet.user_submitted_message.connect(worker.handle_user_prompt)
     pet.quick_action_requested.connect(worker.handle_user_prompt)
+    pet.character_changed.connect(worker.set_character)
 
     # Signals connection: Worker -> UI
     worker.status_changed.connect(lambda state, msg: pet.set_state(state, msg))

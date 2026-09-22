@@ -1,0 +1,120 @@
+name: Build and Release myDeskAssistant
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release Tag Name (e.g. v1.0.0)"
+        required: true
+        default: "v1.0.0"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            artifact_name: myDeskAssistant-windows-x64.zip
+            archive_cmd: Compress-Archive -Path dist/myDeskAssistant/* -DestinationPath myDeskAssistant-windows-x64.zip
+          - os: ubuntu-latest
+            artifact_name: myDeskAssistant-linux-x64.tar.gz
+            archive_cmd: tar -czvf myDeskAssistant-linux-x64.tar.gz -C dist/myDeskAssistant .
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install System Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libpulse0
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Executable Package
+        run: |
+          python build.py
+
+      - name: Compress Release Archive (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ${{ matrix.archive_cmd }}
+
+      - name: Compress Release Archive (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          ${{ matrix.archive_cmd }}
+
+      - name: Upload Artifact to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_name }}
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release_assets/
+          merge-multiple: true
+
+      - name: Determine Release Tag
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: "myDeskAssistant ${{ steps.vars.outputs.tag }}"
+          body: |
+            ## ✨ myDeskAssistant - Frieren Anime Desktop Pet & MCP AI Companion
+            
+            Chào mừng bạn đến với bản phát hành **myDeskAssistant**!
+            
+            ### 📥 Tải xuống cài đặt:
+            - **Windows (x64)**: Tải file `myDeskAssistant-windows-x64.zip`, giải nén, điền `OPENROUTER_API_KEY` vào file `.env` và nhấp đúp `myDeskAssistant.exe` để chạy!
+            - **Linux (x64)**: Tải file `myDeskAssistant-linux-x64.tar.gz`, giải nén và chạy file `./myDeskAssistant`.
+            
+            ### 🌟 Tính năng chính:
+            - **4 Nhân vật Frieren**: Frieren, Fern, Stark, và Himmel với phong cách trò chuyện chân thực và sticker doodle chibi siêu dễ thương.
+            - **Cửa sổ nổi ghim màn hình**: Nền trong suốt, không viền, kéo thả tự do, bóng chat glassmorphism.
+            - **Công cụ MCP**: Kiểm tra CPU/RAM/Pin, khởi chạy ứng dụng, dọn dẹp thư mục Downloads.
+            - **Giọng nói Anime**: Tích hợp Edge-TTS phát âm tiếng Việt tự nhiên đồng bộ khẩu hình.
+          files: |
+            release_assets/*
+          draft: false
+          prerelease: false
