@@ -1,10 +1,12 @@
 """
 Main entry point for myDeskAssistant.
-Supports both GUI Desktop Pet (PyQt6) with Frieren characters and CLI Terminal mode.
+Supports both GUI Desktop Pet (PyQt6) with Frieren characters,
+animations, dances, and CLI Terminal mode.
 """
 
 import sys
 import os
+import re
 import argparse
 import asyncio
 from pathlib import Path
@@ -17,6 +19,36 @@ from core.persona import get_character_prompt, CHARACTER_PERSONAS
 from core.memory import MemoryManager
 from core.llm_client import AssistantBrain
 from core.tts_service import TTSService
+
+
+def detect_interactive_intent(prompt: str) -> dict:
+    """Detect if user asks for a dance or specific expression."""
+    p_lower = prompt.lower()
+    result = {"dance": None, "expression": None}
+
+    # Dances
+    if any(k in p_lower for k in ["lắc lư", "sway"]):
+        result["dance"] = "sway"
+    elif any(k in p_lower for k in ["nhảy cẫng", "nhảy chân sáo", "hop"]):
+        result["dance"] = "hop"
+    elif any(k in p_lower for k in ["xoay", "spin"]):
+        result["dance"] = "spin"
+    elif any(k in p_lower for k in ["nhảy", "khiêu vũ", "dance", "múa", "ăn mừng"]):
+        result["dance"] = "hop"
+
+    # Expressions
+    if any(k in p_lower for k in ["mimic", "rương", "kẹt trong rương"]):
+        result["expression"] = "special"
+    elif any(k in p_lower for k in ["phồng má", "dỗi", "giận"]):
+        result["expression"] = "special"
+    elif any(k in p_lower for k in ["sợ", "hoảng", "cứu tôi"]):
+        result["expression"] = "special"
+    elif any(k in p_lower for k in ["đẹp trai", "tự luyến", "tỏa sáng"]):
+        result["expression"] = "special"
+    elif any(k in p_lower for k in ["bình thường", "đứng yên", "thôi"]):
+        result["expression"] = "idle"
+
+    return result
 
 
 def run_cli_mode():
@@ -45,10 +77,9 @@ def run_cli_mode():
                 if not user_input:
                     continue
                 if user_input.lower() in ["exit", "quit", "thoat"]:
-                    print(f"\nTạm biệt bạn! Hẹn gặp lại trong chuyến hành trình tiếp theo.")
+                    print("\nTạm biệt bạn! Hẹn gặp lại trong chuyến hành trình tiếp theo.")
                     break
 
-                # Switch character command
                 if user_input.lower().startswith("switch "):
                     target = user_input.split()[1].lower()
                     if target in CHARACTER_PERSONAS:
@@ -62,7 +93,6 @@ def run_cli_mode():
                 response = await brain.generate_response(user_input)
                 print(f"\n{char_name}: {response}")
 
-                # Optional TTS
                 audio_file = await tts.generate_speech(response)
                 if audio_file:
                     tts.play_audio_file(audio_file)
@@ -83,7 +113,6 @@ def run_gui_mode():
     app = QApplication(sys.argv)
     app.setApplicationName("myDeskAssistant")
 
-    # Worker QObject to run async LLM and TTS tasks without freezing Qt main thread
     class AssistantWorker(QObject):
         response_ready = pyqtSignal(str, object)  # response_text, audio_path
         status_changed = pyqtSignal(str, str)    # state ('thinking', 'talking', 'idle'), message
@@ -111,13 +140,11 @@ def run_gui_mode():
 
         @pyqtSlot(str)
         def handle_user_prompt(self, prompt: str):
-            """Async processing in thread."""
             async def _process():
                 try:
                     self.status_changed.emit("thinking", "Đang suy nghĩ...")
                     response_text = await self.brain.generate_response(prompt)
                     
-                    # Generate speech
                     self.status_changed.emit("thinking", "Đang tạo giọng nói...")
                     audio_path = await self.tts.generate_speech(response_text)
                     
@@ -131,18 +158,27 @@ def run_gui_mode():
     # Create Pet UI
     pet = DesktopPet(default_character="frieren")
 
-    # Create Worker and background QThread
+    # Background worker thread
     thread = QThread()
     worker = AssistantWorker(character="frieren")
     worker.moveToThread(thread)
     thread.start()
 
-    # Signals connection: UI -> Worker
-    pet.user_submitted_message.connect(worker.handle_user_prompt)
-    pet.quick_action_requested.connect(worker.handle_user_prompt)
+    def on_user_message(prompt: str):
+        # Check interactive intent (dance or expression)
+        intent = detect_interactive_intent(prompt)
+        if intent["dance"]:
+            pet.start_dance(intent["dance"], duration_seconds=8.0)
+        if intent["expression"]:
+            pet.set_expression(intent["expression"])
+
+        worker.handle_user_prompt(prompt)
+
+    # Signals
+    pet.user_submitted_message.connect(on_user_message)
+    pet.quick_action_requested.connect(on_user_message)
     pet.character_changed.connect(worker.set_character)
 
-    # Signals connection: Worker -> UI
     worker.status_changed.connect(lambda state, msg: pet.set_state(state, msg))
 
     def on_response(text: str, audio_path):
@@ -158,7 +194,6 @@ def run_gui_mode():
 
     worker.response_ready.connect(on_response)
 
-    # Cleanup on exit
     app.aboutToQuit.connect(thread.quit)
 
     pet.show()
@@ -166,8 +201,8 @@ def run_gui_mode():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="myDeskAssistant - Anime Desktop Pet Trợ lý thông minh")
-    parser.add_argument("--cli", action="store_true", help="Chạy ở chế độ dòng lệnh Terminal (không mở cửa sổ GUI)")
+    parser = argparse.ArgumentParser(description="myDeskAssistant - Frieren Desktop Pet Trợ lý thông minh")
+    parser.add_argument("--cli", action="store_true", help="Chạy ở chế độ dòng lệnh Terminal")
     args = parser.parse_args()
 
     if args.cli:
