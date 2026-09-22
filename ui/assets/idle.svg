@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280" width="240" height="280">
+  <defs>
+    <!-- Soft glowing filters and gradients -->
+    <linearGradient id="hairGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A5B4FC" />
+      <stop offset="50%" stop-color="#818CF8" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+    <linearGradient id="skinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF5EE" />
+      <stop offset="100%" stop-color="#FFE4E1" />
+    </linearGradient>
+    <linearGradient id="dressGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#312E81" />
+      <stop offset="100%" stop-color="#1E1B4B" />
+    </linearGradient>
+    <linearGradient id="eyeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Shadow below character -->
+  <ellipse cx="120" cy="270" rx="60" ry="8" fill="rgba(0,0,0,0.15)" />
+
+  <!-- Back Hair Twin Tails -->
+  <path d="M 50 110 Q 15 170 35 230 Q 55 190 70 140 Z" fill="url(#hairGrad)" />
+  <path d="M 190 110 Q 225 170 205 230 Q 185 190 170 140 Z" fill="url(#hairGrad)" />
+
+  <!-- Cat ears / Tech Headset -->
+  <polygon points="65,70 40,25 90,50" fill="url(#hairGrad)" />
+  <polygon points="65,65 48,32 82,50" fill="#F472B6" />
+  <polygon points="175,70 200,25 150,50" fill="url(#hairGrad)" />
+  <polygon points="175,65 192,32 158,50" fill="#F472B6" />
+
+  <!-- Headset band -->
+  <path d="M 60 70 Q 120 20 180 70" fill="none" stroke="#38BDF8" stroke-width="6" stroke-linecap="round" filter="url(#glow)" />
+  <circle cx="60" cy="75" r="9" fill="#0284C7" stroke="#38BDF8" stroke-width="2" />
+  <circle cx="180" cy="75" r="9" fill="#0284C7" stroke="#38BDF8" stroke-width="2" />
+
+  <!-- Maid Headdress / Ribbon -->
+  <path d="M 80 50 Q 120 40 160 50 Q 165 42 160 38 Q 120 28 80 38 Z" fill="#FFFFFF" opacity="0.9" />
+
+  <!-- Body / Dress -->
+  <path d="M 85 170 L 155 170 L 175 255 L 65 255 Z" fill="url(#dressGrad)" />
+  <!-- White Apron -->
+  <path d="M 95 170 L 145 170 L 155 250 L 85 250 Z" fill="#FFFFFF" />
+  <!-- Apron Ribbon -->
+  <path d="M 120 185 L 110 175 L 130 175 Z" fill="#F43F5E" />
+  <circle cx="120" cy="180" r="4" fill="#F43F5E" />
+  
+  <!-- Arms resting politely -->
+  <path d="M 85 170 Q 70 200 95 215 Q 110 215 105 195 Z" fill="url(#dressGrad)" />
+  <circle cx="98" cy="213" r="8" fill="url(#skinGrad)" />
+  <path d="M 155 170 Q 170 200 145 215 Q 130 215 135 195 Z" fill="url(#dressGrad)" />
+  <circle cx="142" cy="213" r="8" fill="url(#skinGrad)" />
+
+  <!-- Neck & Collar -->
+  <polygon points="112,150 128,150 125,165 115,165" fill="url(#skinGrad)" />
+  <path d="M 105 160 Q 120 170 135 160" fill="none" stroke="#FFFFFF" stroke-width="4" />
+  <polygon points="116,165 124,165 120,172" fill="#F43F5E" />
+
+  <!-- Head Base -->
+  <ellipse cx="120" cy="115" rx="52" ry="46" fill="url(#skinGrad)" />
+
+  <!-- Soft Cheek Blush -->
+  <ellipse cx="90" cy="128" rx="9" ry="5" fill="#FDA4AF" opacity="0.65" />
+  <ellipse cx="150" cy="128" rx="9" ry="5" fill="#FDA4AF" opacity="0.65" />
+
+  <!-- Eyes (Smiling, open, anime style) -->
+  <!-- Left Eye -->
+  <ellipse cx="95" cy="112" rx="10" ry="12" fill="url(#eyeGrad)" />
+  <ellipse cx="95" cy="108" rx="5" ry="6" fill="#0C4A6E" />
+  <circle cx="92" cy="106" r="3.5" fill="#FFFFFF" />
+  <circle cx="98" cy="116" r="1.8" fill="#FFFFFF" />
+  <path d="M 84 102 Q 95 96 106 102" fill="none" stroke="#312E81" stroke-width="3" stroke-linecap="round" />
+  
+  <!-- Right Eye -->
+  <ellipse cx="145" cy="112" rx="10" ry="12" fill="url(#eyeGrad)" />
+  <ellipse cx="145" cy="108" rx="5" ry="6" fill="#0C4A6E" />
+  <circle cx="142" cy="106" r="3.5" fill="#FFFFFF" />
+  <circle cx="148" cy="116" r="1.8" fill="#FFFFFF" />
+  <path d="M 134 102 Q 145 96 156 102" fill="none" stroke="#312E81" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Cute Nose & Smile -->
+  <circle cx="120" cy="124" r="1.2" fill="#F43F5E" />
+  <path d="M 114 133 Q 120 138 126 133" fill="none" stroke="#BE123C" stroke-width="2.2" stroke-linecap="round" />
+
+  <!-- Front Hair Bangs -->
+  <path d="M 70 95 Q 65 50 120 45 Q 175 50 170 95 Q 155 80 145 98 Q 130 75 120 100 Q 110 75 95 98 Q 85 80 70 95 Z" fill="url(#hairGrad)" />
+  <path d="M 85 70 Q 120 58 155 70" fill="none" stroke="#C7D2FE" stroke-width="2.5" opacity="0.6" stroke-linecap="round" />
+
+  <!-- Floating Sparkles (Idle aura) -->
+  <path d="M 40 85 L 43 90 L 48 93 L 43 96 L 40 101 L 37 96 L 32 93 L 37 90 Z" fill="#FDE047" opacity="0.8" />
+  <path d="M 200 130 L 202 134 L 206 136 L 202 138 L 200 142 L 198 138 L 194 136 L 198 134 Z" fill="#38BDF8" opacity="0.8" />
+</svg>

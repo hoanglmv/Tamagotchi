@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280" width="240" height="280">
+  <defs>
+    <linearGradient id="hairGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A5B4FC" />
+      <stop offset="50%" stop-color="#818CF8" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+    <linearGradient id="skinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF5EE" />
+      <stop offset="100%" stop-color="#FFE4E1" />
+    </linearGradient>
+    <linearGradient id="dressGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#312E81" />
+      <stop offset="100%" stop-color="#1E1B4B" />
+    </linearGradient>
+    <linearGradient id="eyeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+    <filter id="glowHolo" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Shadow below character -->
+  <ellipse cx="120" cy="270" rx="60" ry="8" fill="rgba(0,0,0,0.15)" />
+
+  <!-- Back Hair Twin Tails -->
+  <path d="M 50 110 Q 15 170 35 230 Q 55 190 70 140 Z" fill="url(#hairGrad)" />
+  <path d="M 190 110 Q 225 170 205 230 Q 185 190 170 140 Z" fill="url(#hairGrad)" />
+
+  <!-- Cat ears / Tech Headset -->
+  <polygon points="65,70 40,25 90,50" fill="url(#hairGrad)" />
+  <polygon points="65,65 48,32 82,50" fill="#F472B6" />
+  <polygon points="175,70 200,25 150,50" fill="url(#hairGrad)" />
+  <polygon points="175,65 192,32 158,50" fill="#F472B6" />
+
+  <!-- Headset band with pulsing glow -->
+  <path d="M 60 70 Q 120 20 180 70" fill="none" stroke="#F59E0B" stroke-width="6" stroke-linecap="round" filter="url(#glowHolo)" />
+  <circle cx="60" cy="75" r="9" fill="#D97706" stroke="#FBBF24" stroke-width="2" />
+  <circle cx="180" cy="75" r="9" fill="#D97706" stroke="#FBBF24" stroke-width="2" />
+
+  <!-- Maid Headdress -->
+  <path d="M 80 50 Q 120 40 160 50 Q 165 42 160 38 Q 120 28 80 38 Z" fill="#FFFFFF" opacity="0.9" />
+
+  <!-- Body / Dress -->
+  <path d="M 85 170 L 155 170 L 175 255 L 65 255 Z" fill="url(#dressGrad)" />
+  <!-- White Apron -->
+  <path d="M 95 170 L 145 170 L 155 250 L 85 250 Z" fill="#FFFFFF" />
+  <path d="M 120 185 L 110 175 L 130 175 Z" fill="#F43F5E" />
+  <circle cx="120" cy="180" r="4" fill="#F43F5E" />
+  
+  <!-- Left Arm (Thinking: Finger on chin) -->
+  <path d="M 85 170 Q 65 195 90 190 Q 95 165 110 150 Z" fill="url(#dressGrad)" />
+  <circle cx="112" cy="148" r="8" fill="url(#skinGrad)" />
+
+  <!-- Right Arm -->
+  <path d="M 155 170 Q 170 200 145 215 Q 130 215 135 195 Z" fill="url(#dressGrad)" />
+  <circle cx="142" cy="213" r="8" fill="url(#skinGrad)" />
+
+  <!-- Neck & Collar -->
+  <polygon points="112,150 128,150 125,165 115,165" fill="url(#skinGrad)" />
+  <path d="M 105 160 Q 120 170 135 160" fill="none" stroke="#FFFFFF" stroke-width="4" />
+  <polygon points="116,165 124,165 120,172" fill="#F43F5E" />
+
+  <!-- Head Base -->
+  <ellipse cx="120" cy="115" rx="52" ry="46" fill="url(#skinGrad)" />
+
+  <!-- Soft Cheek Blush -->
+  <ellipse cx="90" cy="128" rx="8" ry="4" fill="#FDA4AF" opacity="0.6" />
+  <ellipse cx="150" cy="128" rx="8" ry="4" fill="#FDA4AF" opacity="0.6" />
+
+  <!-- Eyes (Pondering, looking upward) -->
+  <!-- Left Eye -->
+  <ellipse cx="95" cy="108" rx="10" ry="11" fill="url(#eyeGrad)" />
+  <ellipse cx="95" cy="104" rx="5" ry="5" fill="#0C4A6E" />
+  <circle cx="93" cy="102" r="3" fill="#FFFFFF" />
+  <path d="M 84 98 Q 95 94 106 100" fill="none" stroke="#312E81" stroke-width="3" stroke-linecap="round" />
+  
+  <!-- Right Eye -->
+  <ellipse cx="145" cy="108" rx="10" ry="11" fill="url(#eyeGrad)" />
+  <ellipse cx="145" cy="104" rx="5" ry="5" fill="#0C4A6E" />
+  <circle cx="143" cy="102" r="3" fill="#FFFFFF" />
+  <path d="M 134 100 Q 145 94 156 98" fill="none" stroke="#312E81" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Concentrated small cute mouth (pout / 'o') -->
+  <circle cx="120" cy="133" r="3.5" fill="#BE123C" />
+
+  <!-- Front Hair Bangs -->
+  <path d="M 70 95 Q 65 50 120 45 Q 175 50 170 95 Q 155 80 145 98 Q 130 75 120 100 Q 110 75 95 98 Q 85 80 70 95 Z" fill="url(#hairGrad)" />
+
+  <!-- Thinking Hologram Bubble (Lightbulb & Gear) -->
+  <g filter="url(#glowHolo)" transform="translate(165, 30)">
+    <circle cx="25" cy="25" r="22" fill="#1E293B" opacity="0.8" stroke="#38BDF8" stroke-width="2.5" />
+    <!-- Gear icon -->
+    <path d="M 23 15 L 27 15 L 28 18 L 31 19 L 34 17 L 36 20 L 33 22 L 34 25 L 37 26 L 36 29 L 33 29 L 31 32 L 33 35 L 30 37 L 28 34 L 25 35 L 24 38 L 21 37 L 22 34 L 19 33 L 16 35 L 14 32 L 17 30 L 16 27 L 13 26 L 14 23 L 17 22 L 16 19 L 19 17 L 22 19 Z" fill="#FBBF24" />
+    <circle cx="25" cy="26" r="4.5" fill="#1E293B" />
+  </g>
+  <!-- Tiny connection bubbles -->
+  <circle cx="172" cy="70" r="4" fill="#38BDF8" opacity="0.8" />
+  <circle cx="164" cy="80" r="2.5" fill="#38BDF8" opacity="0.6" />
+</svg>
